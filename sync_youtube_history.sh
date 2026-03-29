@@ -13,8 +13,8 @@ DB_PATH="$HOME/Public/youtube-history/history.db"
 
 # Mac Studio SCP target (via Tailscale)
 MACSTUDIO_USER="urban"
-MACSTUDIO_HOST="100.84.109.72"
-MACSTUDIO_KEY="$HOME/.ssh/macstudio"
+MACSTUDIO_HOST="100.77.241.25"
+MACSTUDIO_KEY="$HOME/.ssh/id_ed25519"
 MACSTUDIO_DEST="/Volumes/Work/youtube-history/"
 
 mkdir -p "$LOG_DIR"
