@@ -1,0 +1,6 @@
+# MCP Server Framework
+mcp>=1.9.2
+
+# Google OAuth 2.0 and API client
+google-auth-oauthlib>=1.2.0
+google-api-python-client>=2.100.0

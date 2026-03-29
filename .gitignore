@@ -1,0 +1,30 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Package artifacts
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+
+# OAuth credentials and tokens
+credentials/*.json
+!credentials/.gitkeep
+token/*.json
+!token/.gitkeep
+
+# Database
+history.db
