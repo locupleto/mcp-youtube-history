@@ -1,5 +1,5 @@
 # MCP Server Framework
-mcp>=1.9.2
+mcp>=2,<3
 
 # Google OAuth 2.0 and API client
 google-auth-oauthlib>=1.2.0

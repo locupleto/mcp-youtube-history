@@ -35,7 +35,7 @@ from typing import Any, Sequence
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import Tool, TextContent, CallToolResult, ListToolsResult
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -56,9 +56,6 @@ API_SERVICE = "dataportability"
 API_VERSION = "v1"
 
 PRODUCTION_ONLY_MSG = "This tool is only available in production mode. Set YOUTUBE_HISTORY_MODE=production to enable sync/import."
-
-# Initialize MCP server
-server = Server("youtube-history")
 
 # Video ID extraction patterns
 VIDEO_ID_PATTERN = re.compile(
@@ -745,7 +742,6 @@ async def handle_get_watch_stats(arguments: dict) -> Sequence[TextContent]:
 # MCP Tool Definitions and Dispatch
 # ---------------------------------------------------------------------------
 
-@server.list_tools()
 async def list_tools() -> list[Tool]:
     """List available tools."""
     tools = []
@@ -866,7 +862,6 @@ async def list_tools() -> list[Tool]:
     return tools
 
 
-@server.call_tool()
 async def call_tool(name: str, arguments: Any) -> Sequence[TextContent]:
     """Handle tool calls."""
     if name == "sync_history":
@@ -881,6 +876,37 @@ async def call_tool(name: str, arguments: Any) -> Sequence[TextContent]:
         return await handle_get_watch_stats(arguments)
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
+
+
+# --- MCP SDK 2.x adapters ----------------------------------------------------
+# list_tools()/call_tool() above keep their v1 signatures so tests and scripts
+# can import and call them directly. These thin adapters bridge them to the
+# SDK 2.x handler contract (ctx/params in, *Result models out) and restore v1
+# error semantics: any exception from the legacy handler becomes
+# CallToolResult(is_error=True, text=str(e)) — readable by the model — instead
+# of an opaque JSON-RPC internal error.
+
+async def _on_list_tools(ctx, params) -> ListToolsResult:
+    return ListToolsResult(tools=await list_tools())
+
+
+async def _on_call_tool(ctx, params) -> CallToolResult:
+    try:
+        content = await call_tool(params.name, params.arguments or {})
+        return CallToolResult(content=list(content), is_error=False)
+    except Exception as e:
+        return CallToolResult(
+            content=[TextContent(type="text", text=str(e))],
+            is_error=True,
+        )
+
+
+server = Server(
+    "youtube-history",
+    version="1.0.0",
+    on_list_tools=_on_list_tools,
+    on_call_tool=_on_call_tool,
+)
 
 
 # ---------------------------------------------------------------------------
